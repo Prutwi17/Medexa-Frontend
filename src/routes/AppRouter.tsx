@@ -3,10 +3,12 @@ import { PortalLayout } from '@/components/layout/PortalLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ROUTES } from '@/config/routes';
 import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage';
+import { AdminDeliveriesPage } from '@/pages/admin/AdminDeliveriesPage';
 import { AdminMedicinesPage } from '@/pages/admin/AdminMedicinesPage';
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
 import { AdminPharmaciesPage } from '@/pages/admin/AdminPharmaciesPage';
+import { AdminRidersPage } from '@/pages/admin/AdminRidersPage';
 import { AdminLoginPage } from '@/pages/auth/AdminLoginPage';
 import { CustomerLoginPage } from '@/pages/auth/CustomerLoginPage';
 import { CustomerRegisterPage } from '@/pages/auth/CustomerRegisterPage';
@@ -35,6 +37,11 @@ import { PharmacyMedicinesPage } from '@/pages/pharmacy/PharmacyMedicinesPage';
 import { PharmacyOrdersPage } from '@/pages/pharmacy/PharmacyOrdersPage';
 import { PharmacyPrescriptionsPage } from '@/pages/pharmacy/PharmacyPrescriptionsPage';
 import { PharmacyProfilePage } from '@/pages/pharmacy/PharmacyProfilePage';
+import { RiderAssignmentsPage } from '@/pages/rider/RiderAssignmentsPage';
+import { RiderDashboardPage } from '@/pages/rider/RiderDashboardPage';
+import { RiderDeliveryDetailPage } from '@/pages/rider/RiderDeliveryDetailPage';
+import { RiderEarningsPage } from '@/pages/rider/RiderEarningsPage';
+import { RiderProfilePage } from '@/pages/rider/RiderProfilePage';
 import { PortalWorkspacePage } from '@/pages/portals/PortalWorkspacePage';
 import { AboutPage } from '@/pages/public/AboutPage';
 import { ContactPage } from '@/pages/public/ContactPage';
@@ -132,50 +139,12 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={['RIDER']} />}>
         <Route path={ROUTES.RIDER_ROOT} element={<PortalLayout role="RIDER" />}>
           <Route index element={<Navigate to={ROUTES.RIDER_DASHBOARD} replace />} />
-          <Route
-            path="dashboard"
-            element={
-              <PortalWorkspacePage
-                role="RIDER"
-                title="Delivery Rider Hub"
-                subtitle="Go online, receive assigned pharmacy pickups, and verify doorstep OTPs."
-                modules={['Availability Toggle', 'Assigned Deliveries', 'OTP Confirmation', 'Earnings Ledger']}
-              />
-            }
-          />
-          <Route
-            path="assignments"
-            element={
-              <PortalWorkspacePage
-                role="RIDER"
-                title="Delivery Assignments"
-                subtitle="Accept system-assigned pharmacy pickups within your active zone."
-                modules={['Assignment Queue', 'Pickup Acceptance']}
-              />
-            }
-          />
-          <Route
-            path="active-delivery"
-            element={
-              <PortalWorkspacePage
-                role="RIDER"
-                title="Active Delivery &amp; OTP"
-                subtitle="Update pickup/transit status and confirm customer handover with delivery OTP."
-                modules={['Transit Milestones', 'Customer OTP Verification']}
-              />
-            }
-          />
-          <Route
-            path="earnings"
-            element={
-              <PortalWorkspacePage
-                role="RIDER"
-                title="Rider Earnings"
-                subtitle="Track per-delivery payouts, incentives, and completed trip history."
-                modules={['Delivery Incentives', 'Payout Records']}
-              />
-            }
-          />
+          <Route path="dashboard" element={<RiderDashboardPage />} />
+          <Route path="assignments" element={<RiderAssignmentsPage />} />
+          <Route path="deliveries/:deliveryId" element={<RiderDeliveryDetailPage />} />
+          <Route path="active-delivery" element={<Navigate to={ROUTES.RIDER_DASHBOARD} replace />} />
+          <Route path="earnings" element={<RiderEarningsPage />} />
+          <Route path="profile" element={<RiderProfilePage />} />
         </Route>
       </Route>
 
@@ -195,6 +164,8 @@ export function AppRouter() {
             }
           />
           <Route path="pharmacies" element={<AdminPharmaciesPage />} />
+          <Route path="riders" element={<AdminRidersPage />} />
+          <Route path="deliveries" element={<AdminDeliveriesPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="medicines" element={<AdminMedicinesPage />} />
           <Route

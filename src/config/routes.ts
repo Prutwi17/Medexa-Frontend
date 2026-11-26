@@ -5,6 +5,11 @@ export const ROUTES = {
   MEDICINE_DETAIL: '/medicines/:slug',
   PHARMACIES: '/pharmacies',
   HOW_IT_WORKS: '/how-it-works',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  HELP: '/help',
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
 
   // Authentication routes
   LOGIN: '/auth/login',

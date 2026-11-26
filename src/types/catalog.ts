@@ -128,6 +128,11 @@ export interface PublicMedicine {
   mrpPrice: number;
   sellingPrice: number;
   prescriptionRequired: boolean;
+  classificationCode?: string;
+  classificationDisplayName?: string;
+  autoSubstitutionAllowed?: boolean;
+  maxUnitsPerOrder?: number;
+  classificationWarning?: string | null;
   inStock: boolean;
   availableQuantity: number;
   categoryId: number;

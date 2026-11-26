@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, MapPin, RefreshCw, XCircle } from 'lucide-react';
+import { ArrowLeft, Building2, Download, FileText, MapPin, RefreshCw, XCircle } from 'lucide-react';
 import { AlertBanner, Badge, Button, Card, Modal, PageLoader, Textarea } from '@/components/ui';
 import { useNotifications } from '@/components/ui/NotificationContext';
 import { ROUTES } from '@/config/routes';
 import { ordersApi } from '@/features/orders/ordersApi';
+import { paymentsApi } from '@/features/payments/paymentsApi';
 import { normalizeApiError } from '@/lib/errorHandler';
 
 export function CustomerOrderDetailPage() {
@@ -18,11 +19,23 @@ export function CustomerOrderDetailPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [refundOpen, setRefundOpen] = useState(false);
   const [refundReason, setRefundReason] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const detailQuery = useQuery({
     queryKey: ['customer', 'orders', numericOrderId],
     queryFn: () => ordersApi.getCustomerOrder(numericOrderId),
     enabled: Number.isFinite(numericOrderId) && numericOrderId > 0,
+  });
+
+  const canViewInvoice =
+    detailQuery.data?.paymentStatus === 'PAID' ||
+    detailQuery.data?.paymentStatus === 'REFUND_REQUESTED' ||
+    detailQuery.data?.paymentStatus === 'REFUNDED';
+
+  const invoiceQuery = useQuery({
+    queryKey: ['customer', 'orders', numericOrderId, 'invoice'],
+    queryFn: () => paymentsApi.getCustomerInvoice(numericOrderId),
+    enabled: Number.isFinite(numericOrderId) && numericOrderId > 0 && Boolean(canViewInvoice),
   });
 
   const cancelMutation = useMutation({
@@ -43,9 +56,14 @@ export function CustomerOrderDetailPage() {
   });
 
   const refundMutation = useMutation({
-    mutationFn: () => ordersApi.requestRefund(numericOrderId, refundReason.trim()),
+    mutationFn: () =>
+      paymentsApi.createCustomerRefund(numericOrderId, {
+        reason: refundReason.trim(),
+        idempotencyKey: `rfd-${numericOrderId}-${Date.now()}`,
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['customer', 'orders'] });
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'refunds'] });
       setRefundOpen(false);
       setRefundReason('');
       notify({
@@ -58,6 +76,18 @@ export function CustomerOrderDetailPage() {
       notify({ variant: 'error', title: 'Refund Request Failed', message: normalizeApiError(err).message });
     },
   });
+
+  const handleDownloadPdf = async () => {
+    if (!detailQuery.data) return;
+    setDownloadingPdf(true);
+    try {
+      await paymentsApi.downloadInvoicePdf('customer', detailQuery.data.id, detailQuery.data.orderNumber);
+    } catch (err) {
+      notify({ variant: 'error', title: 'Invoice Download Failed', message: normalizeApiError(err).message });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   if (detailQuery.isLoading) {
     return <PageLoader message="Loading order timeline and items..." />;
@@ -113,6 +143,18 @@ export function CustomerOrderDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {canViewInvoice && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={downloadingPdf}
+                leftIcon={<Download className="h-4 w-4" />}
+                onClick={() => void handleDownloadPdf()}
+              >
+                Download PDF Invoice
+              </Button>
+            )}
             {order.cancellableByCustomer && (
               <Button
                 type="button"
@@ -232,6 +274,20 @@ export function CustomerOrderDetailPage() {
                 <dd>₹{order.grandTotal.toFixed(2)}</dd>
               </div>
             </dl>
+            {invoiceQuery.data && (
+              <div className="border-t border-border-subtle pt-3 text-xs text-ink-secondary space-y-1">
+                <div className="flex items-center gap-1.5 font-semibold text-ink-primary">
+                  <FileText className="h-3.5 w-3.5 text-brand-700" aria-hidden="true" />
+                  <span>Invoice {invoiceQuery.data.invoiceNumber}</span>
+                </div>
+                {invoiceQuery.data.paymentReference && (
+                  <p className="font-mono text-[11px]">Pay Ref: {invoiceQuery.data.paymentReference}</p>
+                )}
+                {invoiceQuery.data.taxNote && (
+                  <p className="text-[11px] text-ink-muted">{invoiceQuery.data.taxNote}</p>
+                )}
+              </div>
+            )}
           </Card>
 
           <Card className="space-y-3 text-xs text-ink-secondary">

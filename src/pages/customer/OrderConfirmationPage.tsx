@@ -1,19 +1,35 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { Building2, CheckCircle2, Package } from 'lucide-react';
+import { Building2, CheckCircle2, CreditCard, Download, Package } from 'lucide-react';
 import { AlertBanner, Badge, Button, Card, PageLoader } from '@/components/ui';
+import { useNotifications } from '@/components/ui/NotificationContext';
 import { ROUTES } from '@/config/routes';
 import { ordersApi } from '@/features/orders/ordersApi';
+import { paymentsApi } from '@/features/payments/paymentsApi';
 import { normalizeApiError } from '@/lib/errorHandler';
 
 export function OrderConfirmationPage() {
   const { checkoutReference = '' } = useParams();
+  const { notify } = useNotifications();
+  const [downloadingOrderId, setDownloadingOrderId] = useState<number | null>(null);
 
   const sessionQuery = useQuery({
     queryKey: ['customer', 'checkout', 'session', checkoutReference],
     queryFn: () => ordersApi.getCheckoutSession(checkoutReference),
     enabled: Boolean(checkoutReference),
   });
+
+  const handleDownloadInvoice = async (orderId: number, orderNumber: string) => {
+    setDownloadingOrderId(orderId);
+    try {
+      await paymentsApi.downloadInvoicePdf('customer', orderId, orderNumber);
+    } catch (err) {
+      notify({ variant: 'error', title: 'Invoice Download Failed', message: normalizeApiError(err).message });
+    } finally {
+      setDownloadingOrderId(null);
+    }
+  };
 
   if (sessionQuery.isLoading) {
     return <PageLoader message="Loading your confirmed orders..." />;
@@ -86,7 +102,17 @@ export function OrderConfirmationPage() {
               ))}
             </ul>
 
-            <div className="flex justify-end pt-1">
+            <div className="flex flex-wrap justify-end gap-2 pt-1">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                loading={downloadingOrderId === order.id}
+                onClick={() => void handleDownloadInvoice(order.id, order.orderNumber)}
+                leftIcon={<Download className="h-3.5 w-3.5" />}
+              >
+                Download Invoice PDF
+              </Button>
               <Link to={`/customer/orders/${order.id}`}>
                 <Button size="sm" variant="outline" leftIcon={<Package className="h-3.5 w-3.5" />}>
                   Track Pharmacy Order
@@ -100,6 +126,11 @@ export function OrderConfirmationPage() {
       <div className="flex flex-wrap gap-3">
         <Link to={ROUTES.CUSTOMER_ORDERS}>
           <Button>View All Orders</Button>
+        </Link>
+        <Link to={ROUTES.CUSTOMER_PAYMENTS}>
+          <Button variant="outline" leftIcon={<CreditCard className="h-4 w-4" />}>
+            Payment History &amp; Receipts
+          </Button>
         </Link>
         <Link to={ROUTES.MEDICINES}>
           <Button variant="outline">Continue Shopping</Button>

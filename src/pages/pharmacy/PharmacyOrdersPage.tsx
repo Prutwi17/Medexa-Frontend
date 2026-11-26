@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Eye, Package, Search, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Download, Eye, Package, Search, Truck, XCircle } from 'lucide-react';
 import {
   AlertBanner,
   Badge,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui';
 import { useNotifications } from '@/components/ui/NotificationContext';
 import { ordersApi } from '@/features/orders/ordersApi';
+import { paymentsApi } from '@/features/payments/paymentsApi';
 import { storefrontApi } from '@/features/storefront/storefrontApi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { normalizeApiError } from '@/lib/errorHandler';
@@ -288,6 +289,29 @@ export function PharmacyOrdersPage() {
                 <strong>Commission:</strong> ₹{(detailOrder.platformCommissionAmount ?? 0).toFixed(2)} •{' '}
                 <strong>Pharmacy Payout:</strong> ₹{(detailOrder.pharmacyPayoutAmount ?? 0).toFixed(2)}
               </p>
+              {detailOrder.paymentStatus !== 'PENDING' && detailOrder.paymentStatus !== 'FAILED' && (
+                <div className="pt-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Download className="h-3.5 w-3.5" />}
+                    onClick={() =>
+                      void paymentsApi
+                        .downloadInvoicePdf('pharmacy', detailOrder.id, detailOrder.orderNumber)
+                        .catch((err) =>
+                          notify({
+                            variant: 'error',
+                            title: 'Invoice Download Failed',
+                            message: normalizeApiError(err).message,
+                          })
+                        )
+                    }
+                  >
+                    Download Order Invoice PDF
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

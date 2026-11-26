@@ -4,6 +4,7 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ROUTES } from '@/config/routes';
 import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage';
 import { AdminMedicinesPage } from '@/pages/admin/AdminMedicinesPage';
+import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
 import { AdminPharmaciesPage } from '@/pages/admin/AdminPharmaciesPage';
 import { AdminLoginPage } from '@/pages/auth/AdminLoginPage';
 import { CustomerLoginPage } from '@/pages/auth/CustomerLoginPage';
@@ -17,13 +18,18 @@ import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { NotFoundPage, UnauthorizedPage } from '@/pages/errors/ErrorPages';
 import { CustomerAddressesPage } from '@/pages/customer/CustomerAddressesPage';
 import { CustomerCartPage } from '@/pages/customer/CustomerCartPage';
+import { CustomerCheckoutPage } from '@/pages/customer/CustomerCheckoutPage';
 import { CustomerDashboardPage } from '@/pages/customer/CustomerDashboardPage';
+import { CustomerOrderDetailPage } from '@/pages/customer/CustomerOrderDetailPage';
+import { CustomerOrdersPage } from '@/pages/customer/CustomerOrdersPage';
 import { CustomerPrescriptionsPage } from '@/pages/customer/CustomerPrescriptionsPage';
 import { CustomerProfilePage } from '@/pages/customer/CustomerProfilePage';
 import { CustomerWishlistPage } from '@/pages/customer/CustomerWishlistPage';
+import { OrderConfirmationPage } from '@/pages/customer/OrderConfirmationPage';
 import { PharmacyDashboardPage } from '@/pages/pharmacy/PharmacyDashboardPage';
 import { PharmacyInventoryPage } from '@/pages/pharmacy/PharmacyInventoryPage';
 import { PharmacyMedicinesPage } from '@/pages/pharmacy/PharmacyMedicinesPage';
+import { PharmacyOrdersPage } from '@/pages/pharmacy/PharmacyOrdersPage';
 import { PharmacyPrescriptionsPage } from '@/pages/pharmacy/PharmacyPrescriptionsPage';
 import { PharmacyProfilePage } from '@/pages/pharmacy/PharmacyProfilePage';
 import { PortalWorkspacePage } from '@/pages/portals/PortalWorkspacePage';
@@ -76,19 +82,15 @@ export function AppRouter() {
           <Route index element={<Navigate to={ROUTES.CUSTOMER_DASHBOARD} replace />} />
           <Route path="dashboard" element={<CustomerDashboardPage />} />
           <Route path="cart" element={<CustomerCartPage />} />
+          <Route path="checkout" element={<CustomerCheckoutPage />} />
+          <Route
+            path="checkout/confirmation/:checkoutReference"
+            element={<OrderConfirmationPage />}
+          />
           <Route path="wishlist" element={<CustomerWishlistPage />} />
           <Route path="prescriptions" element={<CustomerPrescriptionsPage />} />
-          <Route
-            path="orders"
-            element={
-              <PortalWorkspacePage
-                role="CUSTOMER"
-                title="Order History &amp; Tracking"
-                subtitle="Track individual pharmacy orders, delivery OTPs, refunds, and PDF invoices."
-                modules={['Order Timeline', 'Delivery OTP', 'Refund Requests', 'PDF Invoice']}
-              />
-            }
-          />
+          <Route path="orders" element={<CustomerOrdersPage />} />
+          <Route path="orders/:orderId" element={<CustomerOrderDetailPage />} />
           <Route path="addresses" element={<CustomerAddressesPage />} />
           <Route path="profile" element={<CustomerProfilePage />} />
         </Route>
@@ -103,17 +105,7 @@ export function AppRouter() {
           <Route path="medicines" element={<PharmacyMedicinesPage />} />
           <Route path="inventory" element={<PharmacyInventoryPage />} />
           <Route path="prescriptions" element={<PharmacyPrescriptionsPage />} />
-          <Route
-            path="orders"
-            element={
-              <PortalWorkspacePage
-                role="PHARMACY"
-                title="Pharmacy Orders"
-                subtitle="Prepare verified orders and coordinate pickup handover with assigned riders."
-                modules={['Incoming Orders', 'Packing & Rider Handover']}
-              />
-            }
-          />
+          <Route path="orders" element={<PharmacyOrdersPage />} />
           <Route
             path="payouts"
             element={
@@ -208,17 +200,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="orders"
-            element={
-              <PortalWorkspacePage
-                role="ADMIN"
-                title="Orders, Payments &amp; Refunds"
-                subtitle="Monitor multi-pharmacy checkouts, Razorpay webhook events, and refund exceptions."
-                modules={['Checkout Monitoring', 'Webhook Idempotency', 'Refund Oversight']}
-              />
-            }
-          />
+          <Route path="orders" element={<AdminOrdersPage />} />
           <Route
             path="payouts"
             element={

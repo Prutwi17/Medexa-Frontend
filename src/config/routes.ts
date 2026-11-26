@@ -26,9 +26,12 @@ export const ROUTES = {
   CUSTOMER_ROOT: '/customer',
   CUSTOMER_DASHBOARD: '/customer/dashboard',
   CUSTOMER_CART: '/customer/cart',
+  CUSTOMER_CHECKOUT: '/customer/checkout',
+  CUSTOMER_ORDER_CONFIRMATION: '/customer/checkout/confirmation/:checkoutReference',
   CUSTOMER_WISHLIST: '/customer/wishlist',
   CUSTOMER_PRESCRIPTIONS: '/customer/prescriptions',
   CUSTOMER_ORDERS: '/customer/orders',
+  CUSTOMER_ORDER_DETAIL: '/customer/orders/:orderId',
   CUSTOMER_ADDRESSES: '/customer/addresses',
   CUSTOMER_PROFILE: '/customer/profile',
 

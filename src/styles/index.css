@@ -155,3 +155,28 @@
     block-size: 0;
   }
 }
+
+/* Native <progress> styling per modern-web-guidance (no grouped -webkit- / -moz- rules) */
+progress.medexa-progress {
+  appearance: none;
+  border: 0 solid;
+  overflow: clip;
+  border-radius: 1e5px;
+  background: var(--medexa-surface-subtle, #edf1ef);
+}
+
+progress.medexa-progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress.medexa-progress::-webkit-progress-value {
+  background: var(--medexa-green-700, #0b6e4f);
+  border-radius: 1e5px;
+  transition: inline-size 0.3s ease;
+}
+
+progress.medexa-progress::-moz-progress-bar {
+  background: var(--medexa-green-700, #0b6e4f);
+  border-radius: 1e5px;
+  transition: inline-size 0.3s ease;
+}

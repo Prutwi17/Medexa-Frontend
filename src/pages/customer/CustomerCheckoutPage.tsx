@@ -16,6 +16,7 @@ import { useNotifications } from '@/components/ui/NotificationContext';
 import { ROUTES } from '@/config/routes';
 import { storefrontApi } from '@/features/storefront/storefrontApi';
 import { ordersApi } from '@/features/orders/ordersApi';
+import { paymentsApi } from '@/features/payments/paymentsApi';
 import { normalizeApiError } from '@/lib/errorHandler';
 import type { CheckoutSession } from '@/types/orders';
 
@@ -23,6 +24,7 @@ declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => {
       open: () => void;
+      on?: (event: string, callback: (resp: { error?: { code?: string; description?: string; metadata?: { payment_id?: string } } }) => void) => void;
     };
   }
 }
@@ -115,15 +117,32 @@ export function CustomerCheckoutPage() {
         razorpaySignature: vars.signature,
       });
     },
-    onSuccess: (paid) => {
+    onSuccess: (updated) => {
       void queryClient.invalidateQueries({ queryKey: ['customer', 'cart'] });
       void queryClient.invalidateQueries({ queryKey: ['customer', 'orders'] });
-      notify({
-        variant: 'success',
-        title: 'Payment Verified & Orders Placed',
-        message: `Parent checkout ${paid.checkoutReference} placed ${paid.orders.length} pharmacy order(s).`,
-      });
-      navigate(`/customer/checkout/confirmation/${paid.checkoutReference}`);
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'payments'] });
+      if (updated.status === 'PAID') {
+        notify({
+          variant: 'success',
+          title: 'Payment Verified & Orders Placed',
+          message: `Parent checkout ${updated.checkoutReference} placed ${updated.orders.length} pharmacy order(s).`,
+        });
+        navigate(`/customer/checkout/confirmation/${updated.checkoutReference}`);
+      } else if (updated.status === 'FAILED' || updated.status === 'CANCELLED' || updated.status === 'EXPIRED') {
+        notify({
+          variant: 'error',
+          title: `Payment ${updated.status}`,
+          message: updated.failureReason || 'Payment did not complete; reserved inventory has been released.',
+        });
+        navigate(`/customer/checkout/status/${updated.checkoutReference}?outcome=failed`);
+      } else {
+        notify({
+          variant: 'info',
+          title: 'Payment Pending Capture Verification',
+          message: 'Payment authorization received. Tracking backend capture confirmation...',
+        });
+        navigate(`/customer/checkout/status/${updated.checkoutReference}?outcome=pending`);
+      }
     },
     onError: (err) => {
       notify({
@@ -192,6 +211,33 @@ export function CustomerCheckoutPage() {
       theme: {
         color: '#0b6e4f',
       },
+      modal: {
+        ondismiss: () => {
+          notify({
+            variant: 'info',
+            title: 'Payment Window Closed',
+            message: 'Checking or waiting on payment status. Your inventory reservation remains active briefly.',
+          });
+        },
+      },
+    });
+    rzp.on?.('payment.failed', (failureResp) => {
+      const code = failureResp.error?.code;
+      const desc = failureResp.error?.description || 'Payment failed in Razorpay Checkout';
+      const failedPayId = failureResp.error?.metadata?.payment_id;
+      void paymentsApi
+        .reportCheckoutFailure(activeSession.checkoutReference, {
+          razorpayPaymentId: failedPayId,
+          errorCode: code,
+          errorDescription: desc,
+          releaseStock: true,
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          void queryClient.invalidateQueries({ queryKey: ['customer', 'payments'] });
+          void queryClient.invalidateQueries({ queryKey: ['customer', 'orders'] });
+          navigate(`/customer/checkout/status/${activeSession.checkoutReference}?outcome=failed`);
+        });
     });
     rzp.open();
   };
@@ -499,6 +545,15 @@ export function CustomerCheckoutPage() {
                 leftIcon={<CreditCard className="h-4 w-4" />}
               >
                 Pay ₹{activeSession.grandTotal.toFixed(2)} with Razorpay
+              </Button>
+
+              <Button
+                type="button"
+                fullWidth
+                variant="outline"
+                onClick={() => navigate(`/customer/checkout/status/${activeSession.checkoutReference}`)}
+              >
+                Check Backend Payment Status
               </Button>
 
               <Button

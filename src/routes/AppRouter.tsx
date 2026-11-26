@@ -5,6 +5,7 @@ import { ROUTES } from '@/config/routes';
 import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage';
 import { AdminMedicinesPage } from '@/pages/admin/AdminMedicinesPage';
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
+import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
 import { AdminPharmaciesPage } from '@/pages/admin/AdminPharmaciesPage';
 import { AdminLoginPage } from '@/pages/auth/AdminLoginPage';
 import { CustomerLoginPage } from '@/pages/auth/CustomerLoginPage';
@@ -22,9 +23,11 @@ import { CustomerCheckoutPage } from '@/pages/customer/CustomerCheckoutPage';
 import { CustomerDashboardPage } from '@/pages/customer/CustomerDashboardPage';
 import { CustomerOrderDetailPage } from '@/pages/customer/CustomerOrderDetailPage';
 import { CustomerOrdersPage } from '@/pages/customer/CustomerOrdersPage';
+import { CustomerPaymentsPage } from '@/pages/customer/CustomerPaymentsPage';
 import { CustomerPrescriptionsPage } from '@/pages/customer/CustomerPrescriptionsPage';
 import { CustomerProfilePage } from '@/pages/customer/CustomerProfilePage';
 import { CustomerWishlistPage } from '@/pages/customer/CustomerWishlistPage';
+import { CheckoutPaymentStatusPage } from '@/pages/customer/CheckoutPaymentStatusPage';
 import { OrderConfirmationPage } from '@/pages/customer/OrderConfirmationPage';
 import { PharmacyDashboardPage } from '@/pages/pharmacy/PharmacyDashboardPage';
 import { PharmacyInventoryPage } from '@/pages/pharmacy/PharmacyInventoryPage';
@@ -84,9 +87,14 @@ export function AppRouter() {
           <Route path="cart" element={<CustomerCartPage />} />
           <Route path="checkout" element={<CustomerCheckoutPage />} />
           <Route
+            path="checkout/status/:checkoutReference"
+            element={<CheckoutPaymentStatusPage />}
+          />
+          <Route
             path="checkout/confirmation/:checkoutReference"
             element={<OrderConfirmationPage />}
           />
+          <Route path="payments" element={<CustomerPaymentsPage />} />
           <Route path="wishlist" element={<CustomerWishlistPage />} />
           <Route path="prescriptions" element={<CustomerPrescriptionsPage />} />
           <Route path="orders" element={<CustomerOrdersPage />} />
@@ -201,6 +209,7 @@ export function AppRouter() {
             }
           />
           <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="payments" element={<AdminPaymentsPage />} />
           <Route
             path="payouts"
             element={

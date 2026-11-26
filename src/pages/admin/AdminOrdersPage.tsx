@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Eye, Package, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Eye, Package, Search } from 'lucide-react';
 import {
   AlertBanner,
   Badge,
@@ -12,6 +12,7 @@ import {
   Select,
 } from '@/components/ui';
 import { ordersApi } from '@/features/orders/ordersApi';
+import { paymentsApi } from '@/features/payments/paymentsApi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { normalizeApiError } from '@/lib/errorHandler';
 import type { CheckoutSession, Order, OrderPaymentStatus, OrderStatus } from '@/types/orders';
@@ -225,6 +226,21 @@ export function AdminOrdersPage() {
                 <strong>Tax:</strong> ₹{selectedOrder.taxAmount.toFixed(2)} •{' '}
                 <strong>Total:</strong> ₹{selectedOrder.grandTotal.toFixed(2)}
               </p>
+              {selectedOrder.paymentStatus !== 'PENDING' && selectedOrder.paymentStatus !== 'FAILED' && (
+                <div className="pt-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Download className="h-3.5 w-3.5" />}
+                    onClick={() =>
+                      void paymentsApi.downloadInvoicePdf('admin', selectedOrder.id, selectedOrder.orderNumber)
+                    }
+                  >
+                    Download Invoice PDF
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">

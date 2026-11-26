@@ -12,4 +12,5 @@ export * from './NotificationContext';
 export * from './PasswordInput';
 export * from './Select';
 export * from './Table';
+export * from './Tabs';
 export * from './Textarea';

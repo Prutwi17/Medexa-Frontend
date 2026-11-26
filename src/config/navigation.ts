@@ -4,6 +4,7 @@ import {
   Building2,
   ClipboardCheck,
   FileText,
+  FolderTree,
   Heart,
   LayoutDashboard,
   MapPin,
@@ -39,6 +40,7 @@ export const PORTAL_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   ],
   PHARMACY: [
     { label: 'Overview', to: ROUTES.PHARMACY_DASHBOARD, icon: LayoutDashboard },
+    { label: 'Profile & Licenses', to: ROUTES.PHARMACY_PROFILE, icon: Building2 },
     { label: 'Medicines', to: ROUTES.PHARMACY_MEDICINES, icon: Pill },
     { label: 'Batch Inventory', to: ROUTES.PHARMACY_INVENTORY, icon: Activity },
     { label: 'Rx Reviews', to: ROUTES.PHARMACY_PRESCRIPTIONS, icon: ClipboardCheck },
@@ -54,6 +56,7 @@ export const PORTAL_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   ADMIN: [
     { label: 'Operations', to: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
     { label: 'Pharmacies', to: ROUTES.ADMIN_PHARMACIES, icon: Building2 },
+    { label: 'Categories', to: ROUTES.ADMIN_CATEGORIES, icon: FolderTree },
     { label: 'Medicines', to: ROUTES.ADMIN_MEDICINES, icon: Pill },
     { label: 'Users & Riders', to: ROUTES.ADMIN_USERS, icon: Users },
     { label: 'Orders', to: ROUTES.ADMIN_ORDERS, icon: Package },

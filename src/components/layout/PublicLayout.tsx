@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { Menu, PhoneCall, ShieldCheck, ShoppingBag, X } from 'lucide-react';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LogOut, Menu, PhoneCall, ShieldCheck, ShoppingBag, User, X } from 'lucide-react';
 import { BrandLogo, Button } from '@/components/ui';
 import { PUBLIC_NAV_ITEMS } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
+import { useAuth } from '@/features/auth/AuthContext';
 import { cn } from '@/lib/cn';
+import { getDashboardRouteForRole } from '@/types/auth';
 
 export function PublicLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileMenuOpen(false);
+    navigate(ROUTES.HOME);
+  };
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface-canvas text-ink-primary">
@@ -65,16 +75,37 @@ export function PublicLayout() {
               <ShoppingBag className="h-4 w-4 text-brand-700" aria-hidden="true" />
               <span>Cart</span>
             </Link>
-            <Link to={ROUTES.LOGIN}>
-              <Button variant="outline" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link to={ROUTES.REGISTER}>
-              <Button variant="primary" size="sm">
-                Create Account
-              </Button>
-            </Link>
+
+            {isAuthenticated && user ? (
+              <>
+                <Link to={getDashboardRouteForRole(user.role)}>
+                  <Button variant="secondary" size="sm" leftIcon={<User className="h-4 w-4" />}>
+                    {user.fullName.split(' ')[0]}
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  leftIcon={<LogOut className="h-4 w-4" />}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to={ROUTES.LOGIN}>
+                  <Button variant="outline" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to={ROUTES.REGISTER}>
+                  <Button variant="primary" size="sm">
+                    Create Account
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -119,16 +150,34 @@ export function PublicLayout() {
               ))}
             </ul>
             <div className="mt-4 flex flex-col gap-2 border-t border-border-subtle pt-4">
-              <Link to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" fullWidth>
-                  Sign In
-                </Button>
-              </Link>
-              <Link to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="primary" fullWidth>
-                  Create Account
-                </Button>
-              </Link>
+              {isAuthenticated && user ? (
+                <>
+                  <Link
+                    to={getDashboardRouteForRole(user.role)}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button variant="secondary" fullWidth>
+                      Open {user.role} Portal
+                    </Button>
+                  </Link>
+                  <Button variant="outline" fullWidth onClick={handleLogout}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" fullWidth>
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="primary" fullWidth>
+                      Create Account
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         )}
@@ -173,18 +222,18 @@ export function PublicLayout() {
             <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Partners</h2>
             <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
               <li>
-                <Link to={ROUTES.PHARMACY_DASHBOARD} className="hover:text-brand-700">
-                  Pharmacy Partner Portal
+                <Link to={ROUTES.REGISTER_PHARMACY} className="hover:text-brand-700">
+                  Register Pharmacy
                 </Link>
               </li>
               <li>
-                <Link to={ROUTES.RIDER_DASHBOARD} className="hover:text-brand-700">
-                  Delivery Rider Hub
+                <Link to={ROUTES.REGISTER_RIDER} className="hover:text-brand-700">
+                  Register as Rider
                 </Link>
               </li>
               <li>
-                <Link to={ROUTES.ADMIN_DASHBOARD} className="hover:text-brand-700">
-                  Operations Admin
+                <Link to={ROUTES.ADMIN_LOGIN} className="hover:text-brand-700">
+                  Operations Admin Sign In
                 </Link>
               </li>
             </ul>

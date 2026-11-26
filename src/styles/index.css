@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme {
+  --color-brand-900: #064431;
+  --color-brand-800: #08583f;
+  --color-brand-700: #0b6e4f;
+  --color-brand-600: #11845f;
+  --color-brand-500: #169c71;
+  --color-brand-100: #e7f5ef;
+  --color-brand-50: #f3faf7;
+
+  --color-surface-canvas: #ffffff;
+  --color-surface-soft: #f6f8f7;
+  --color-surface-subtle: #edf1ef;
+
+  --color-ink-primary: #18221f;
+  --color-ink-secondary: #495853;
+  --color-ink-muted: #64746e;
+
+  --color-border-subtle: #dce4e0;
+  --color-border-strong: #9fb0a8;
+}
+
+@layer base {
+  html {
+    color: var(--medexa-ink-primary);
+    background-color: var(--medexa-bg-canvas);
+    font-family:
+      "Plus Jakarta Sans",
+      "Inter",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--medexa-bg-canvas);
+    color: var(--medexa-ink-primary);
+  }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--medexa-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  clip-path: inset(50%);
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  inset-block-start: -4rem;
+  z-index: 60;
+  padding: 0.625rem 1rem;
+  border-radius: var(--medexa-radius-md);
+  background: var(--medexa-green-700);
+  color: var(--medexa-ink-inverse);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  box-shadow: var(--medexa-shadow-md);
+  transition: inset-block-start 120ms ease;
+}
+
+.skip-link:focus {
+  inset-block-start: 1rem;
+}

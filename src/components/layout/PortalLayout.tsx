@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { ArrowLeft, Menu, X } from 'lucide-react';
-import { Badge, BrandLogo } from '@/components/ui';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
+import { Badge, BrandLogo, Button } from '@/components/ui';
 import { PORTAL_LABELS, PORTAL_NAV_BY_ROLE } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
+import { useAuth } from '@/features/auth/AuthContext';
 import { cn } from '@/lib/cn';
 import type { UserRole } from '@/types/auth';
 
@@ -13,9 +14,16 @@ interface PortalLayoutProps {
 
 export function PortalLayout({ role }: PortalLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const navItems = PORTAL_NAV_BY_ROLE[role];
   const portalMeta = PORTAL_LABELS[role];
   const RoleIcon = portalMeta.icon;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate(role === 'ADMIN' ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN, { replace: true });
+  };
 
   return (
     <div className="flex min-h-dvh bg-surface-soft text-ink-primary">
@@ -38,6 +46,12 @@ export function PortalLayout({ role }: PortalLayoutProps) {
           <Badge variant="brand" icon={<RoleIcon className="h-3.5 w-3.5" />}>
             {portalMeta.badge}
           </Badge>
+          {user && (
+            <div className="mt-2">
+              <p className="truncate text-sm font-semibold text-ink-primary">{user.fullName}</p>
+              <p className="truncate text-xs text-ink-muted">{user.email}</p>
+            </div>
+          )}
         </div>
 
         <nav aria-label="Portal" className="flex-1 overflow-y-auto px-3 py-4">
@@ -66,7 +80,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
           </ul>
         </nav>
 
-        <div className="border-t border-border-subtle p-4">
+        <div className="space-y-2 border-t border-border-subtle p-4">
           <Link
             to={ROUTES.HOME}
             className="inline-flex items-center gap-2 text-xs font-semibold text-ink-secondary hover:text-brand-700"
@@ -74,6 +88,15 @@ export function PortalLayout({ role }: PortalLayoutProps) {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Back to Marketplace</span>
           </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            fullWidth
+            onClick={handleLogout}
+            leftIcon={<LogOut className="h-4 w-4" />}
+          >
+            Sign Out
+          </Button>
         </div>
       </aside>
 
@@ -105,12 +128,15 @@ export function PortalLayout({ role }: PortalLayoutProps) {
 
           <div className="flex items-center gap-3">
             <Badge variant="neutral">{role}</Badge>
-            <Link
-              to={ROUTES.HOME}
-              className="text-xs font-semibold text-brand-700 hover:underline lg:hidden"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="lg:hidden"
+              leftIcon={<LogOut className="h-4 w-4" />}
             >
-              Marketplace
-            </Link>
+              Sign Out
+            </Button>
           </div>
         </header>
 

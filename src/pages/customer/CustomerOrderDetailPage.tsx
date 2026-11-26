@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, Download, FileText, MapPin, RefreshCw, XCircle } from 'lucide-react';
+import { ArrowLeft, Building2, Download, FileText, KeyRound, MapPin, RefreshCw, ShieldCheck, Truck, XCircle } from 'lucide-react';
 import { AlertBanner, Badge, Button, Card, Modal, PageLoader, Textarea } from '@/components/ui';
 import { useNotifications } from '@/components/ui/NotificationContext';
 import { ROUTES } from '@/config/routes';
+import { deliveryApi } from '@/features/delivery/deliveryApi';
 import { ordersApi } from '@/features/orders/ordersApi';
 import { paymentsApi } from '@/features/payments/paymentsApi';
 import { normalizeApiError } from '@/lib/errorHandler';
@@ -37,6 +38,44 @@ export function CustomerOrderDetailPage() {
     queryFn: () => paymentsApi.getCustomerInvoice(numericOrderId),
     enabled: Number.isFinite(numericOrderId) && numericOrderId > 0 && Boolean(canViewInvoice),
   });
+
+  const trackingQuery = useQuery({
+    queryKey: ['customer', 'orders', numericOrderId, 'tracking'],
+    queryFn: () => deliveryApi.getCustomerTracking(numericOrderId),
+    enabled: Number.isFinite(numericOrderId) && numericOrderId > 0,
+    refetchInterval: (q) => {
+      const s = q.state.data?.orderStatus;
+      return s && s !== 'DELIVERED' && s !== 'CANCELLED' && s !== 'FAILED' && s !== 'PHARMACY_REJECTED'
+        ? 8000
+        : false;
+    },
+  });
+
+  const regenerateOtpMutation = useMutation({
+    mutationFn: () => deliveryApi.regenerateCustomerOtp(numericOrderId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'orders', numericOrderId, 'tracking'] });
+      notify({
+        variant: 'success',
+        title: 'Fresh OTP Generated',
+        message: 'Share the new 6-digit delivery OTP with your rider at handover.',
+      });
+    },
+    onError: (err) => {
+      notify({ variant: 'error', title: 'Cannot Refresh OTP', message: normalizeApiError(err).message });
+    },
+  });
+
+  const openProofImage = async () => {
+    try {
+      const blob = await deliveryApi.fetchCustomerProofBlob(numericOrderId);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      notify({ variant: 'error', title: 'Proof Unavailable', message: normalizeApiError(err).message });
+    }
+  };
 
   const cancelMutation = useMutation({
     mutationFn: () => ordersApi.cancelCustomerOrder(numericOrderId, cancelReason.trim()),
@@ -226,6 +265,129 @@ export function CustomerOrderDetailPage() {
                 </div>
               ))}
             </div>
+          </Card>
+
+          <Card className="space-y-3">
+            <h2 className="text-base font-bold text-ink-primary">Live Delivery, OTP &amp; Fulfillment Status</h2>
+            {trackingQuery.data ? (
+              <div className="space-y-4 text-xs">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[var(--medexa-radius-sm)] bg-surface-soft p-3">
+                    <span className="text-ink-muted">Pharmacy Preparation</span>
+                    <p className="mt-1 font-bold text-ink-primary">{trackingQuery.data.orderStatus}</p>
+                    {trackingQuery.data.readyAt && (
+                      <p className="text-[11px] text-ink-muted">
+                        Packed: {new Date(trackingQuery.data.readyAt).toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                  <div className="rounded-[var(--medexa-radius-sm)] bg-surface-soft p-3">
+                    <span className="text-ink-muted">Rider Assignment</span>
+                    <p className="mt-1 font-bold text-ink-primary">
+                      {trackingQuery.data.deliveryAssignmentStatus}
+                    </p>
+                    {trackingQuery.data.assignedRiderName && (
+                      <p className="text-[11px] text-ink-secondary">
+                        Rider: {trackingQuery.data.assignedRiderName} ({trackingQuery.data.assignedRiderVehicleType}{' '}
+                        {trackingQuery.data.assignedRiderVehicleNumber})
+                      </p>
+                    )}
+                  </div>
+                  <div className="rounded-[var(--medexa-radius-sm)] bg-surface-soft p-3">
+                    <span className="text-ink-muted">Delivery Status</span>
+                    <p className="mt-1 font-bold text-ink-primary">
+                      {trackingQuery.data.deliveryStatus || 'Awaiting Dispatch'}
+                    </p>
+                    {trackingQuery.data.deliveryEtaMinutes && (
+                      <p className="text-[11px] text-ink-muted">
+                        ETA ~{trackingQuery.data.deliveryEtaMinutes} mins
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {trackingQuery.data.assignedRiderPhone && (
+                  <p className="text-ink-secondary">
+                    Rider Contact: <strong>{trackingQuery.data.assignedRiderPhone}</strong>
+                    {trackingQuery.data.riderLatitude != null && trackingQuery.data.riderLongitude != null
+                      ? ` • Live GPS: ${trackingQuery.data.riderLatitude}, ${trackingQuery.data.riderLongitude}`
+                      : ''}
+                  </p>
+                )}
+
+                <div className="rounded-[var(--medexa-radius-md)] border border-brand-600/30 bg-brand-50/60 p-4 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-bold text-ink-primary text-sm">
+                      <KeyRound className="h-4 w-4 text-brand-700" aria-hidden="true" />
+                      <span>Doorstep Delivery OTP Instructions</span>
+                    </div>
+                    {trackingQuery.data.deliveryStatus === 'OUT_FOR_DELIVERY' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        loading={regenerateOtpMutation.isPending}
+                        onClick={() => regenerateOtpMutation.mutate()}
+                      >
+                        Generate Fresh OTP
+                      </Button>
+                    )}
+                  </div>
+
+                  <p className="text-ink-secondary">{trackingQuery.data.otpInstructions}</p>
+
+                  {trackingQuery.data.deliveryOtp && (
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      <span className="rounded-[var(--medexa-radius-sm)] bg-white px-4 py-2 font-mono text-2xl font-bold tracking-widest text-brand-800 shadow-xs border border-brand-200">
+                        {trackingQuery.data.deliveryOtp}
+                      </span>
+                      <div className="text-[11px] text-ink-muted">
+                        <p>
+                          Attempts used: {trackingQuery.data.otpAttempts} / {trackingQuery.data.maxOtpAttempts}
+                        </p>
+                        {trackingQuery.data.otpExpiresAt && (
+                          <p>Valid until {new Date(trackingQuery.data.otpExpiresAt).toLocaleTimeString()}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {trackingQuery.data.hasDeliveryProof && (
+                  <div className="flex items-center justify-between rounded-[var(--medexa-radius-sm)] border border-border-subtle p-3">
+                    <span className="flex items-center gap-2 font-semibold text-ink-primary">
+                      <ShieldCheck className="h-4 w-4 text-brand-700" aria-hidden="true" />
+                      Delivery Handover Proof Recorded ({trackingQuery.data.proofType})
+                    </span>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void openProofImage()}>
+                      View Proof Photo
+                    </Button>
+                  </div>
+                )}
+
+                {trackingQuery.data.deliveryTimeline.length > 0 && (
+                  <div>
+                    <h3 className="font-bold text-ink-primary flex items-center gap-1.5 mb-2">
+                      <Truck className="h-3.5 w-3.5 text-brand-700" aria-hidden="true" />
+                      <span>Delivery Dispatch Timeline</span>
+                    </h3>
+                    <ol className="space-y-2 border-s-2 border-brand-200 ps-3">
+                      {trackingQuery.data.deliveryTimeline.map((ev) => (
+                        <li key={ev.id}>
+                          <p className="font-semibold text-ink-primary">
+                            {ev.eventType} ({ev.newStatus})
+                          </p>
+                          {ev.notes && <p className="text-ink-secondary">{ev.notes}</p>}
+                          <p className="text-[11px] text-ink-muted">
+                            {new Date(ev.createdAt).toLocaleString()}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </Card>
 
           <Card className="space-y-3">

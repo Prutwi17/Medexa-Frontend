@@ -2,6 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { PortalLayout } from '@/components/layout/PortalLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ROUTES } from '@/config/routes';
+import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage';
+import { AdminMedicinesPage } from '@/pages/admin/AdminMedicinesPage';
+import { AdminPharmaciesPage } from '@/pages/admin/AdminPharmaciesPage';
 import { AdminLoginPage } from '@/pages/auth/AdminLoginPage';
 import { CustomerLoginPage } from '@/pages/auth/CustomerLoginPage';
 import { CustomerRegisterPage } from '@/pages/auth/CustomerRegisterPage';
@@ -12,9 +15,14 @@ import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
 import { RiderRegisterPage } from '@/pages/auth/RiderRegisterPage';
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { NotFoundPage, UnauthorizedPage } from '@/pages/errors/ErrorPages';
+import { PharmacyDashboardPage } from '@/pages/pharmacy/PharmacyDashboardPage';
+import { PharmacyInventoryPage } from '@/pages/pharmacy/PharmacyInventoryPage';
+import { PharmacyMedicinesPage } from '@/pages/pharmacy/PharmacyMedicinesPage';
+import { PharmacyProfilePage } from '@/pages/pharmacy/PharmacyProfilePage';
 import { PortalWorkspacePage } from '@/pages/portals/PortalWorkspacePage';
 import { HomePage } from '@/pages/public/HomePage';
 import { HowItWorksPage } from '@/pages/public/HowItWorksPage';
+import { MedicineDetailPage } from '@/pages/public/MedicineDetailPage';
 import { MedicinesPage } from '@/pages/public/MedicinesPage';
 import { PharmaciesPage } from '@/pages/public/PharmaciesPage';
 import { GuestOnlyRoute, ProtectedRoute } from '@/routes/ProtectedRoute';
@@ -26,12 +34,11 @@ export function AppRouter() {
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.HOME} element={<HomePage />} />
         <Route path={ROUTES.MEDICINES} element={<MedicinesPage />} />
-        <Route path={ROUTES.MEDICINE_DETAIL} element={<MedicinesPage />} />
+        <Route path={ROUTES.MEDICINE_DETAIL} element={<MedicineDetailPage />} />
         <Route path={ROUTES.PHARMACIES} element={<PharmaciesPage />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<HowItWorksPage />} />
         <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
 
-        {/* Guest-only sign-in & registration pages */}
         <Route element={<GuestOnlyRoute />}>
           <Route path={ROUTES.LOGIN} element={<CustomerLoginPage />} />
           <Route path={ROUTES.REGISTER} element={<CustomerRegisterPage />} />
@@ -40,7 +47,6 @@ export function AppRouter() {
           <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />
         </Route>
 
-        {/* Recovery, email verification, and pending approval pages */}
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
         <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
@@ -124,39 +130,10 @@ export function AppRouter() {
       <Route element={<ProtectedRoute allowedRoles={['PHARMACY']} />}>
         <Route path={ROUTES.PHARMACY_ROOT} element={<PortalLayout role="PHARMACY" />}>
           <Route index element={<Navigate to={ROUTES.PHARMACY_DASHBOARD} replace />} />
-          <Route
-            path="dashboard"
-            element={
-              <PortalWorkspacePage
-                role="PHARMACY"
-                title="Pharmacy Partner Console"
-                subtitle="Manage drug license compliance, batch inventory, Rx approvals, and fulfillment."
-                modules={['License Verification', 'Delivery Zones', 'Batch Inventory', 'Rx Reviews', 'Payout Ledger']}
-              />
-            }
-          />
-          <Route
-            path="medicines"
-            element={
-              <PortalWorkspacePage
-                role="PHARMACY"
-                title="Pharmacy Medicine Listings"
-                subtitle="Submit medicines for platform catalog approval and manage pricing."
-                modules={['Medicine Submissions', 'Approval Status']}
-              />
-            }
-          />
-          <Route
-            path="inventory"
-            element={
-              <PortalWorkspacePage
-                role="PHARMACY"
-                title="Batch &amp; Expiry Inventory"
-                subtitle="Track stock batches, expiry dates, reservations, and stock movement audit trails."
-                modules={['Medicine Batches', 'Stock Reservations', 'Expiry Alerts']}
-              />
-            }
-          />
+          <Route path="dashboard" element={<PharmacyDashboardPage />} />
+          <Route path="profile" element={<PharmacyProfilePage />} />
+          <Route path="medicines" element={<PharmacyMedicinesPage />} />
+          <Route path="inventory" element={<PharmacyInventoryPage />} />
           <Route
             path="prescriptions"
             element={
@@ -259,28 +236,9 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="pharmacies"
-            element={
-              <PortalWorkspacePage
-                role="ADMIN"
-                title="Pharmacy &amp; License Verification"
-                subtitle="Review pharmacy drug license submissions and approve compliant partners."
-                modules={['Pending License Queue', 'Active Pharmacies']}
-              />
-            }
-          />
-          <Route
-            path="medicines"
-            element={
-              <PortalWorkspacePage
-                role="ADMIN"
-                title="Catalog &amp; Medicine Approvals"
-                subtitle="Approve or reject pharmacy medicine submissions before catalog publication."
-                modules={['Categories', 'Medicine Moderation']}
-              />
-            }
-          />
+          <Route path="pharmacies" element={<AdminPharmaciesPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="medicines" element={<AdminMedicinesPage />} />
           <Route
             path="users"
             element={

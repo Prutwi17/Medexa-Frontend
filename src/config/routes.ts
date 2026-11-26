@@ -49,6 +49,7 @@ export const ROUTES = {
   ADMIN_ROOT: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PHARMACIES: '/admin/pharmacies',
+  ADMIN_CATEGORIES: '/admin/categories',
   ADMIN_MEDICINES: '/admin/medicines',
   ADMIN_USERS: '/admin/users',
   ADMIN_ORDERS: '/admin/orders',

@@ -5,8 +5,17 @@ export const ROUTES = {
   MEDICINE_DETAIL: '/medicines/:slug',
   PHARMACIES: '/pharmacies',
   HOW_IT_WORKS: '/how-it-works',
+
+  // Authentication routes
   LOGIN: '/auth/login',
   REGISTER: '/auth/register',
+  REGISTER_PHARMACY: '/auth/register/pharmacy',
+  REGISTER_RIDER: '/auth/register/rider',
+  ADMIN_LOGIN: '/auth/admin/login',
+  FORGOT_PASSWORD: '/auth/forgot-password',
+  RESET_PASSWORD: '/auth/reset-password',
+  VERIFY_EMAIL: '/auth/verify-email',
+  PENDING_APPROVAL: '/auth/pending-approval',
 
   // Customer portal routes
   CUSTOMER_ROOT: '/customer',

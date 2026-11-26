@@ -351,6 +351,12 @@ export function CustomerCartPage() {
                 </div>
               </dl>
 
+              <Link to={ROUTES.CUSTOMER_CHECKOUT} className="block">
+                <Button fullWidth disabled={!cart.readyForCheckout}>
+                  Proceed to Multi-Pharmacy Checkout
+                </Button>
+              </Link>
+
               {!cart.readyForCheckout && cart.checkoutBlockers.length > 0 && (
                 <AlertBanner
                   variant="warning"
@@ -363,7 +369,7 @@ export function CustomerCartPage() {
                 <ShieldAlert className="h-4 w-4 text-brand-700 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   Prescription items stay blocked until verified by an authorized dispensing pharmacist.
-                  Checkout &amp; Razorpay payment launch in the next release milestone.
+                  Coupons and taxes are computed server-side at checkout.
                 </span>
               </div>
             </Card>

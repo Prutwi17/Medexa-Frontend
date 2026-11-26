@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Building2, ChevronLeft, ChevronRight, FileCheck2, Pill, Search } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, FileCheck2, Pill, Search } from 'lucide-react';
+import { MedicineProductCard } from '@/components/storefront/MedicineProductCard';
 import {
   AlertBanner,
   Badge,
@@ -11,14 +12,26 @@ import {
   PageLoader,
   Select,
 } from '@/components/ui';
-import { resolveMediaUrl } from '@/config/env';
+import { useNotifications } from '@/components/ui/NotificationContext';
+import { ROUTES } from '@/config/routes';
+import { useAuth } from '@/features/auth/AuthContext';
 import { catalogApi } from '@/features/catalog/catalogApi';
+import { storefrontApi } from '@/features/storefront/storefrontApi';
 import { useDebounce } from '@/hooks/useDebounce';
+import { normalizeApiError } from '@/lib/errorHandler';
+import type { PublicMedicine } from '@/types/catalog';
 
 export function MedicinesPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { notify } = useNotifications();
+  const { isAuthenticated, user } = useAuth();
+  const isCustomer = isAuthenticated && user?.role === 'CUSTOMER';
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '');
   const [categoryId, setCategoryId] = useState(searchParams.get('categoryId') ?? '');
+  const [pharmacyId] = useState(searchParams.get('pharmacyId') ?? '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') ?? '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') ?? '');
   const [rxFilter, setRxFilter] = useState(searchParams.get('rx') ?? 'ALL');
@@ -33,16 +46,23 @@ export function MedicinesPage() {
     queryFn: catalogApi.listPublicCategories,
   });
 
+  const wishlistQuery = useQuery({
+    queryKey: ['customer', 'wishlist'],
+    queryFn: storefrontApi.listWishlist,
+    enabled: isCustomer,
+  });
+
   const medicinesQuery = useQuery({
     queryKey: [
       'public',
       'medicines',
-      { debouncedSearch, categoryId, minPrice, maxPrice, rxFilter, inStockOnly, sort, page },
+      { debouncedSearch, categoryId, pharmacyId, minPrice, maxPrice, rxFilter, inStockOnly, sort, page },
     ],
     queryFn: () =>
       catalogApi.searchPublicMedicines({
         q: debouncedSearch.trim() || undefined,
         categoryId: categoryId ? Number(categoryId) : undefined,
+        pharmacyId: pharmacyId ? Number(pharmacyId) : undefined,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         inStockOnly,
@@ -53,6 +73,39 @@ export function MedicinesPage() {
         size: 12,
       }),
   });
+
+  const addToCartMutation = useMutation({
+    mutationFn: (med: PublicMedicine) => storefrontApi.addToCart({ medicineId: med.id, quantity: 1 }),
+    onSuccess: (_cart, med) => {
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'cart'] });
+      notify({ variant: 'success', title: 'Added to Cart', message: med.name });
+    },
+    onError: (err) => {
+      notify({ variant: 'error', title: 'Unable to Add', message: normalizeApiError(err).message });
+    },
+  });
+
+  const wishlistMutation = useMutation({
+    mutationFn: async (med: PublicMedicine) => {
+      const saved = wishlistIds.has(med.id);
+      if (saved) {
+        await storefrontApi.removeFromWishlist(med.id);
+        return { saved: false, name: med.name };
+      }
+      await storefrontApi.addToWishlist(med.id);
+      return { saved: true, name: med.name };
+    },
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ['customer', 'wishlist'] });
+      notify({
+        variant: 'success',
+        title: res.saved ? 'Saved to Wishlist' : 'Removed from Wishlist',
+        message: res.name,
+      });
+    },
+  });
+
+  const wishlistIds = new Set((wishlistQuery.data ?? []).map((entry) => entry.medicine.id));
 
   const syncParams = (nextPage = 0) => {
     const next = new URLSearchParams();
@@ -250,75 +303,33 @@ export function MedicinesPage() {
       ) : (
         <>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {medicines.map((med) => {
-              const imageUrl = resolveMediaUrl(med.primaryImageUrl);
-              return (
-                <Card key={med.id} padding="none" className="flex flex-col overflow-hidden hover:border-brand-600 transition-colors">
-                  <Link to={`/medicines/${med.slug}`} className="block bg-surface-soft aspect-[4/3] overflow-hidden border-b border-border-subtle">
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={med.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-brand-700/40">
-                        <Pill className="h-12 w-12" aria-hidden="true" />
-                      </div>
-                    )}
-                  </Link>
-
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge variant={med.prescriptionRequired ? 'warning' : 'success'}>
-                        {med.prescriptionRequired ? 'Rx Required' : 'OTC'}
-                      </Badge>
-                      <Badge variant={med.inStock ? 'brand' : 'danger'}>
-                        {med.inStock ? `${med.availableQuantity} in stock` : 'Out of stock'}
-                      </Badge>
-                    </div>
-
-                    <Link to={`/medicines/${med.slug}`} className="mt-3 block">
-                      <h2 className="text-base font-semibold text-ink-primary hover:text-brand-800 line-clamp-1">
-                        {med.name}
-                      </h2>
-                    </Link>
-                    <p className="text-xs font-medium text-ink-secondary">
-                      {med.brand} • {med.packSize}
-                    </p>
-                    <p className="mt-1 text-xs text-ink-muted line-clamp-2">{med.composition}</p>
-
-                    <div className="mt-auto pt-4">
-                      <div className="flex items-center gap-1.5 text-xs text-ink-secondary border-t border-border-subtle pt-3">
-                        <Building2 className="h-3.5 w-3.5 text-brand-700 shrink-0" aria-hidden="true" />
-                        <span className="truncate">
-                          {med.pharmacyName} ({med.pharmacyCity})
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex items-baseline justify-between gap-2">
-                        <div className="tabular-nums">
-                          <span className="text-lg font-bold text-ink-primary">
-                            ₹{med.sellingPrice.toFixed(2)}
-                          </span>
-                          {med.mrpPrice > med.sellingPrice && (
-                            <span className="ms-2 text-xs text-ink-muted line-through">
-                              ₹{med.mrpPrice.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        <Link to={`/medicines/${med.slug}`}>
-                          <Button size="sm" variant="outline">
-                            Details
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+            {medicines.map((med) => (
+              <MedicineProductCard
+                key={med.id}
+                medicine={med}
+                wishlisted={wishlistIds.has(med.id)}
+                busy={addToCartMutation.isPending || wishlistMutation.isPending}
+                onQuickAdd={(item) => {
+                  if (!isCustomer) {
+                    notify({
+                      variant: 'info',
+                      title: 'Sign In Required',
+                      message: 'Sign in with a customer account to add medicines to your cart.',
+                    });
+                    navigate(ROUTES.LOGIN);
+                    return;
+                  }
+                  addToCartMutation.mutate(item);
+                }}
+                onToggleWishlist={(item) => {
+                  if (!isCustomer) {
+                    navigate(ROUTES.LOGIN);
+                    return;
+                  }
+                  wishlistMutation.mutate(item);
+                }}
+              />
+            ))}
           </div>
 
           {pagination && pagination.totalPages > 1 && (

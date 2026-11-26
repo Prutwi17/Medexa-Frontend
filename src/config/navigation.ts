@@ -26,7 +26,8 @@ import type { UserRole } from '@/types/auth';
 export const PUBLIC_NAV_ITEMS = [
   { label: 'Medicines', to: ROUTES.MEDICINES },
   { label: 'Verified Pharmacies', to: ROUTES.PHARMACIES },
-  { label: 'How It Works', to: ROUTES.HOW_IT_WORKS },
+  { label: 'About', to: ROUTES.ABOUT },
+  { label: 'Help & FAQ', to: ROUTES.HELP },
 ] as const;
 
 export const PORTAL_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
@@ -37,6 +38,7 @@ export const PORTAL_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
     { label: 'Prescriptions', to: ROUTES.CUSTOMER_PRESCRIPTIONS, icon: FileText },
     { label: 'Orders', to: ROUTES.CUSTOMER_ORDERS, icon: Package },
     { label: 'Addresses', to: ROUTES.CUSTOMER_ADDRESSES, icon: MapPin },
+    { label: 'Profile', to: ROUTES.CUSTOMER_PROFILE, icon: UserCheck },
   ],
   PHARMACY: [
     { label: 'Overview', to: ROUTES.PHARMACY_DASHBOARD, icon: LayoutDashboard },

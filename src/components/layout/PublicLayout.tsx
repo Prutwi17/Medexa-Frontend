@@ -192,13 +192,16 @@ export function PublicLayout() {
           <div>
             <BrandLogo />
             <p className="mt-3 text-xs leading-relaxed text-ink-secondary">
-              Multi-vendor medicine home delivery platform connecting patients with verified
+              Multi-vendor medicine home delivery platform connecting patients with license-verified
               community pharmacies and tracked doorstep fulfillment.
+            </p>
+            <p className="mt-3 text-xs font-medium text-ink-primary">
+              Customer Support: support@medexa.in
             </p>
           </div>
 
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Patients</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Patients &amp; Care</h2>
             <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
               <li>
                 <Link to={ROUTES.MEDICINES} className="hover:text-brand-700">
@@ -206,20 +209,61 @@ export function PublicLayout() {
                 </Link>
               </li>
               <li>
-                <Link to={ROUTES.CUSTOMER_PRESCRIPTIONS} className="hover:text-brand-700">
-                  Prescription Upload
+                <Link to={ROUTES.PHARMACIES} className="hover:text-brand-700">
+                  Verified Pharmacies
                 </Link>
               </li>
               <li>
-                <Link to={ROUTES.CUSTOMER_ORDERS} className="hover:text-brand-700">
-                  Order Tracking
+                <Link to={ROUTES.CUSTOMER_PRESCRIPTIONS} className="hover:text-brand-700">
+                  Upload Prescription
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.CUSTOMER_CART} className="hover:text-brand-700">
+                  Shopping Cart &amp; Wishlist
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.CUSTOMER_ADDRESSES} className="hover:text-brand-700">
+                  Delivery Addresses
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Partners</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Company &amp; Support</h2>
+            <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
+              <li>
+                <Link to={ROUTES.ABOUT} className="hover:text-brand-700">
+                  About Medexa
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.CONTACT} className="hover:text-brand-700">
+                  Contact Support
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.HELP} className="hover:text-brand-700">
+                  Help &amp; FAQ
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.PRIVACY} className="hover:text-brand-700">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to={ROUTES.TERMS} className="hover:text-brand-700">
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Partners &amp; Compliance</h2>
             <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
               <li>
                 <Link to={ROUTES.REGISTER_PHARMACY} className="hover:text-brand-700">
@@ -237,13 +281,8 @@ export function PublicLayout() {
                 </Link>
               </li>
             </ul>
-          </div>
-
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-ink-primary">Compliance</h2>
-            <p className="mt-3 text-xs leading-relaxed text-ink-secondary">
-              Schedule-restricted medicines require a valid prescription approved by authorized
-              pharmacy personnel prior to dispatch. Delivery confirmation uses customer OTP.
+            <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+              Rx-restricted medicines require verified pharmacist approval prior to dispatch.
             </p>
           </div>
         </div>

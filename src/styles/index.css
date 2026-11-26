@@ -86,3 +86,97 @@
 .skip-link:focus {
   inset-block-start: 1rem;
 }
+
+/* Accessible card stretched primary link with elevated secondary actions */
+.medexa-card:has(a.medexa-card-link) {
+  position: relative;
+}
+
+.medexa-card a.medexa-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.medexa-card:has(a.medexa-card-link) button,
+.medexa-card:has(a.medexa-card-link) footer,
+.medexa-card:has(a.medexa-card-link) a:not(.medexa-card-link) {
+  position: relative;
+  z-index: 1;
+}
+
+.medexa-card a.medexa-card-link:focus-visible {
+  outline: none;
+}
+
+.medexa-card:has(a.medexa-card-link:focus-visible) {
+  outline: 2px solid var(--medexa-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Native details/summary FAQ accordion with inline marker and discrete content transition */
+.medexa-faq-summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.medexa-faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.medexa-faq-summary::before {
+  content: "";
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+  background-color: currentColor;
+  clip-path: polygon(20% 35%, 50% 65%, 80% 35%, 90% 45%, 50% 85%, 10% 45%);
+  rotate: -90deg;
+}
+
+.medexa-faq-details[open] > .medexa-faq-summary::before {
+  rotate: 0deg;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .medexa-faq-summary::before {
+    transition: rotate 0.2s ease;
+  }
+
+  .medexa-faq-details::details-content {
+    interpolate-size: allow-keywords;
+    overflow: clip;
+    contain: layout;
+    transition: block-size 0.25s ease-in-out, content-visibility 0.25s ease-in-out, display 0.25s ease-in-out;
+    transition-behavior: allow-discrete;
+  }
+
+  .medexa-faq-details:not([open])::details-content {
+    block-size: 0;
+  }
+}
+
+/* Native <progress> styling per modern-web-guidance (no grouped -webkit- / -moz- rules) */
+progress.medexa-progress {
+  appearance: none;
+  border: 0 solid;
+  overflow: clip;
+  border-radius: 1e5px;
+  background: var(--medexa-surface-subtle, #edf1ef);
+}
+
+progress.medexa-progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress.medexa-progress::-webkit-progress-value {
+  background: var(--medexa-green-700, #0b6e4f);
+  border-radius: 1e5px;
+  transition: inline-size 0.3s ease;
+}
+
+progress.medexa-progress::-moz-progress-bar {
+  background: var(--medexa-green-700, #0b6e4f);
+  border-radius: 1e5px;
+  transition: inline-size 0.3s ease;
+}
